@@ -1,2 +1,9 @@
 .worktrees/
 .codex/
+node_modules/
+.next/
+coverage/
+playwright-report/
+test-results/
+.env
+.env*.local
