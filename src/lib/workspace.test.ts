@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const userUpsertMock = vi.hoisted(() => vi.fn());
-const projectUpsertMock = vi.hoisted(() => vi.fn());
-const savedRangeUpsertMock = vi.hoisted(() => vi.fn());
-const scenarioUpsertMock = vi.hoisted(() => vi.fn());
+const projectCountMock = vi.hoisted(() => vi.fn());
+const projectCreateMock = vi.hoisted(() => vi.fn());
+const savedRangeCreateMock = vi.hoisted(() => vi.fn());
+const scenarioCreateMock = vi.hoisted(() => vi.fn());
 const projectFindManyMock = vi.hoisted(() => vi.fn());
 const savedRangeFindManyMock = vi.hoisted(() => vi.fn());
 const projectFindUniqueMock = vi.hoisted(() => vi.fn());
@@ -11,37 +11,42 @@ const scenarioFindFirstMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/db", () => ({
   db: {
-    user: { upsert: userUpsertMock },
     project: {
-      upsert: projectUpsertMock,
+      count: projectCountMock,
+      create: projectCreateMock,
       findMany: projectFindManyMock,
       findUnique: projectFindUniqueMock,
     },
     savedRange: {
-      upsert: savedRangeUpsertMock,
+      create: savedRangeCreateMock,
       findMany: savedRangeFindManyMock,
     },
     scenario: {
-      upsert: scenarioUpsertMock,
+      create: scenarioCreateMock,
       findFirst: scenarioFindFirstMock,
     },
   },
 }));
 
 import {
-  ensureDemoWorkspaceData,
-  getDemoProjectWorkspace,
-  listDemoProjects,
-  listDemoRanges,
+  ensureStarterWorkspaceData,
+  getProjectWorkspace,
+  listProjectsForOwner,
+  listRangesForOwner,
 } from "./workspace";
 
 describe("workspace data", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    userUpsertMock.mockResolvedValue({ id: "demo-user" });
-    projectUpsertMock.mockResolvedValue(undefined);
-    savedRangeUpsertMock.mockResolvedValue(undefined);
-    scenarioUpsertMock.mockResolvedValue(undefined);
+    projectCountMock.mockResolvedValue(0);
+    projectCreateMock
+      .mockResolvedValueOnce({ id: "project-1" })
+      .mockResolvedValueOnce({ id: "project-2" });
+    savedRangeCreateMock
+      .mockResolvedValueOnce({ id: "range-1" })
+      .mockResolvedValueOnce({ id: "range-2" })
+      .mockResolvedValueOnce({ id: "range-3" });
+    scenarioCreateMock.mockResolvedValue(undefined);
     projectFindManyMock.mockResolvedValue([
       {
         id: "project-1",
@@ -73,17 +78,16 @@ describe("workspace data", () => {
     });
   });
 
-  it("seeds the demo workspace entities", async () => {
-    await ensureDemoWorkspaceData();
+  it("seeds the starter workspace entities for an owner", async () => {
+    await ensureStarterWorkspaceData("user-1");
 
-    expect(userUpsertMock).toHaveBeenCalledTimes(1);
-    expect(projectUpsertMock).toHaveBeenCalledTimes(2);
-    expect(savedRangeUpsertMock).toHaveBeenCalledTimes(3);
-    expect(scenarioUpsertMock).toHaveBeenCalledTimes(2);
+    expect(projectCreateMock).toHaveBeenCalledTimes(2);
+    expect(savedRangeCreateMock).toHaveBeenCalledTimes(3);
+    expect(scenarioCreateMock).toHaveBeenCalledTimes(2);
   });
 
-  it("loads demo projects from the database", async () => {
-    await expect(listDemoProjects()).resolves.toEqual([
+  it("loads owner projects from the database", async () => {
+    await expect(listProjectsForOwner("user-1")).resolves.toEqual([
       {
         id: "project-1",
         name: "Friday 3-Bet Pots",
@@ -93,7 +97,7 @@ describe("workspace data", () => {
   });
 
   it("loads a workspace snapshot from the database", async () => {
-    await expect(getDemoProjectWorkspace("project-1")).resolves.toEqual({
+    await expect(getProjectWorkspace("user-1", "project-1")).resolves.toEqual({
       project: {
         id: "project-1",
         name: "Friday 3-Bet Pots",
@@ -114,7 +118,7 @@ describe("workspace data", () => {
   });
 
   it("loads saved ranges from the database", async () => {
-    await expect(listDemoRanges()).resolves.toEqual([
+    await expect(listRangesForOwner("user-1")).resolves.toEqual([
       {
         id: "range-1",
         name: "CO Open",

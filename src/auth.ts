@@ -11,6 +11,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: "jwt",
   },
+  callbacks: {
+    async redirect({ url, baseUrl }) {
+      const targetUrl = new URL(url, baseUrl);
+      const allowedOrigins = new Set([
+        new URL(baseUrl).origin,
+        "http://127.0.0.1:3000",
+        "http://localhost:3000",
+      ]);
+
+      if (allowedOrigins.has(targetUrl.origin)) {
+        return targetUrl.toString();
+      }
+
+      return baseUrl;
+    },
+    async jwt({ token, user }) {
+      if (user?.id) {
+        token.sub = user.id;
+      }
+
+      return token;
+    },
+  },
   providers: [
     Credentials({
       name: "Email",

@@ -1,6 +1,7 @@
 import { ProjectWorkspace } from "@/components/scenario/project-workspace";
-import { getDemoProjectWorkspace } from "@/lib/workspace";
-import { notFound } from "next/navigation";
+import { getCurrentUser } from "@/lib/current-user";
+import { getProjectWorkspace } from "@/lib/workspace";
+import { notFound, redirect } from "next/navigation";
 
 type ProjectWorkspacePageProps = {
   params: Promise<{
@@ -11,8 +12,14 @@ type ProjectWorkspacePageProps = {
 export default async function ProjectWorkspacePage({
   params,
 }: ProjectWorkspacePageProps) {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/sign-in");
+  }
+
   const { projectId } = await params;
-  const workspace = await getDemoProjectWorkspace(projectId);
+  const workspace = await getProjectWorkspace(user.id, projectId);
 
   if (!workspace) {
     notFound();

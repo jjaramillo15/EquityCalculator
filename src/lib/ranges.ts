@@ -1,6 +1,5 @@
 import { db } from "@/lib/db";
 import { parseRangeText } from "@/lib/poker/range-parser";
-import { ensureDemoUser } from "@/lib/workspace";
 
 type CreateSavedRangeInput = {
   ownerId: string;
@@ -10,10 +9,6 @@ type CreateSavedRangeInput = {
 };
 
 export async function createSavedRange(input: CreateSavedRangeInput) {
-  if (input.ownerId === "demo-user") {
-    await ensureDemoUser();
-  }
-
   return db.savedRange.create({
     data: {
       ownerId: input.ownerId,

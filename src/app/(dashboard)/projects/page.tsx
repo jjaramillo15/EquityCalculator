@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { ProjectList } from "@/components/projects/project-list";
-import { listDemoProjects } from "@/lib/workspace";
+import { getCurrentUser } from "@/lib/current-user";
+import { listProjectsForOwner } from "@/lib/workspace";
 import { redirect } from "next/navigation";
 
 export default async function ProjectsPage() {
@@ -10,8 +11,14 @@ export default async function ProjectsPage() {
     redirect("/sign-in");
   }
 
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/sign-in");
+  }
+
   const identity = session.user.name ?? session.user.email ?? "Player";
-  const projects = await listDemoProjects();
+  const projects = await listProjectsForOwner(user.id);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">

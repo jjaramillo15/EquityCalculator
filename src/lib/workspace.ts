@@ -1,32 +1,21 @@
 import { db } from "@/lib/db";
-
-const DEMO_OWNER = {
-  id: "demo-user",
-  email: "demo@example.com",
-  name: "Demo Player",
-};
-
-const DEMO_PROJECTS = [
+const STARTER_PROJECTS = [
   {
-    id: "project-1",
     name: "Friday 3-Bet Pots",
   },
   {
-    id: "project-2",
     name: "Blind vs Blind Study",
   },
 ] as const;
 
-const DEMO_RANGES = [
+const STARTER_RANGES = [
   {
-    id: "range-1",
     name: "CO Open",
     textValue: "22+,A2s+,K9s+,QTs+,JTs,ATo+,KJo+",
     matrixState: { AA: true, AKs: true },
     canonicalRange: ["22+", "A2s+", "K9s+", "QTs+", "JTs", "ATo+", "KJo+"],
   },
   {
-    id: "range-2",
     name: "BB Defend",
     textValue: "44+,A2s+,K8s+,Q9s+,J9s+,T9s,98s,AJo+,KQo",
     matrixState: { QQ: true, JTs: true },
@@ -43,7 +32,6 @@ const DEMO_RANGES = [
     ],
   },
   {
-    id: "range-3",
     name: "3-Bet Value",
     textValue: "TT+,AQs+,AKo",
     matrixState: { TT: true, AKo: true },
@@ -51,15 +39,14 @@ const DEMO_RANGES = [
   },
 ] as const;
 
-const DEMO_SCENARIOS = [
+const STARTER_SCENARIOS = [
   {
-    id: "scenario-1",
-    projectId: "project-1",
+    projectIndex: 0,
     name: "BTN vs BB single-raised pot",
     board: ["Ah", "Kd", "7c"],
     players: [
-      { label: "Hero", rangeId: "range-1" },
-      { label: "Villain", rangeId: "range-2" },
+      { label: "Hero", rangeIndex: 0 },
+      { label: "Villain", rangeIndex: 1 },
     ],
     result: {
       players: [
@@ -69,13 +56,12 @@ const DEMO_SCENARIOS = [
     },
   },
   {
-    id: "scenario-2",
-    projectId: "project-2",
+    projectIndex: 1,
     name: "Limped blind battle",
     board: ["Qs", "8h", "4d"],
     players: [
-      { label: "Hero", rangeId: "range-2" },
-      { label: "Villain", rangeId: "range-3" },
+      { label: "Hero", rangeIndex: 1 },
+      { label: "Villain", rangeIndex: 2 },
     ],
     result: {
       players: [
@@ -108,73 +94,70 @@ type WorkspaceSnapshot = {
   players: Array<{ label: string; equity: number }>;
 };
 
-export async function ensureDemoWorkspaceData() {
-  await db.user.upsert({
-    where: { id: DEMO_OWNER.id },
-    update: {
-      email: DEMO_OWNER.email,
-      name: DEMO_OWNER.name,
-    },
-    create: DEMO_OWNER,
+export async function ensureStarterWorkspaceData(ownerId: string) {
+  const existingProjects = await db.project.count({
+    where: { ownerId },
   });
 
-  for (const project of DEMO_PROJECTS) {
-    await db.project.upsert({
-      where: { id: project.id },
-      update: {
-        name: project.name,
-      },
-      create: {
-        ...project,
-        ownerId: DEMO_OWNER.id,
-      },
-    });
+  if (existingProjects > 0) {
+    return ownerId;
   }
 
-  for (const range of DEMO_RANGES) {
-    await db.savedRange.upsert({
-      where: { id: range.id },
-      update: {
-        name: range.name,
-        textValue: range.textValue,
-        matrixState: range.matrixState,
-        canonicalRange: range.canonicalRange,
-      },
-      create: {
-        ...range,
-        ownerId: DEMO_OWNER.id,
-      },
-    });
+  const createdProjects = [];
+
+  for (const project of STARTER_PROJECTS) {
+    createdProjects.push(
+      await db.project.create({
+        data: {
+          ownerId,
+          name: project.name,
+        },
+      }),
+    );
   }
 
-  for (const scenario of DEMO_SCENARIOS) {
-    await db.scenario.upsert({
-      where: { id: scenario.id },
-      update: {
+  const createdRanges = [];
+
+  for (const range of STARTER_RANGES) {
+    createdRanges.push(
+      await db.savedRange.create({
+        data: {
+          ownerId,
+          name: range.name,
+          textValue: range.textValue,
+          matrixState: range.matrixState,
+          canonicalRange: range.canonicalRange,
+        },
+      }),
+    );
+  }
+
+  for (const scenario of STARTER_SCENARIOS) {
+    await db.scenario.create({
+      data: {
+        ownerId,
+        projectId: createdProjects[scenario.projectIndex].id,
         name: scenario.name,
         board: scenario.board,
-        players: scenario.players,
+        players: scenario.players.map((player) => ({
+          label: player.label,
+          rangeId: createdRanges[player.rangeIndex].id,
+        })),
         result: scenario.result,
-      },
-      create: {
-        ...scenario,
-        ownerId: DEMO_OWNER.id,
       },
     });
   }
-
-  return DEMO_OWNER.id;
+  
+  return ownerId;
 }
 
-export async function ensureDemoUser() {
-  return ensureDemoWorkspaceData();
-}
-
-export async function listDemoProjects(): Promise<WorkspaceProjectListItem[]> {
-  await ensureDemoWorkspaceData();
+export async function listProjectsForOwner(
+  ownerId: string,
+): Promise<WorkspaceProjectListItem[]> {
+  await ensureStarterWorkspaceData(ownerId);
 
   const projects = await db.project.findMany({
-    where: { ownerId: DEMO_OWNER.id },
+    where: { ownerId },
     include: {
       scenarios: {
         select: {
@@ -200,11 +183,13 @@ export async function listDemoProjects(): Promise<WorkspaceProjectListItem[]> {
   }));
 }
 
-export async function listDemoRanges(): Promise<WorkspaceRangeListItem[]> {
-  await ensureDemoWorkspaceData();
+export async function listRangesForOwner(
+  ownerId: string,
+): Promise<WorkspaceRangeListItem[]> {
+  await ensureStarterWorkspaceData(ownerId);
 
   const ranges = await db.savedRange.findMany({
-    where: { ownerId: DEMO_OWNER.id },
+    where: { ownerId },
     orderBy: {
       updatedAt: "asc",
     },
@@ -217,21 +202,22 @@ export async function listDemoRanges(): Promise<WorkspaceRangeListItem[]> {
   }));
 }
 
-export async function getDemoProjectWorkspace(
+export async function getProjectWorkspace(
+  ownerId: string,
   projectId: string,
 ): Promise<WorkspaceSnapshot | null> {
-  await ensureDemoWorkspaceData();
+  await ensureStarterWorkspaceData(ownerId);
 
   const [project, ranges, scenario] = await Promise.all([
     db.project.findUnique({
-      where: { id: projectId },
+      where: { id: projectId, ownerId },
       select: {
         id: true,
         name: true,
       },
     }),
     db.savedRange.findMany({
-      where: { ownerId: DEMO_OWNER.id },
+      where: { ownerId },
       orderBy: {
         updatedAt: "asc",
       },
@@ -243,7 +229,7 @@ export async function getDemoProjectWorkspace(
     }),
     db.scenario.findFirst({
       where: {
-        ownerId: DEMO_OWNER.id,
+        ownerId,
         projectId,
       },
       orderBy: {

@@ -1,8 +1,16 @@
 import { SavedRangeList } from "@/components/ranges/saved-range-list";
-import { listDemoRanges } from "@/lib/workspace";
+import { getCurrentUser } from "@/lib/current-user";
+import { listRangesForOwner } from "@/lib/workspace";
+import { redirect } from "next/navigation";
 
 export default async function RangesPage() {
-  const ranges = await listDemoRanges();
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/sign-in");
+  }
+
+  const ranges = await listRangesForOwner(user.id);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">

@@ -3,8 +3,16 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import ProjectWorkspacePage from "./page";
 
+vi.mock("@/lib/current-user", () => ({
+  getCurrentUser: vi.fn().mockResolvedValue({
+    id: "user-1",
+    email: "hero@example.com",
+    name: "hero",
+  }),
+}));
+
 vi.mock("@/lib/workspace", () => ({
-  getDemoProjectWorkspace: vi.fn().mockResolvedValue({
+  getProjectWorkspace: vi.fn().mockResolvedValue({
     project: {
       id: "project-1",
       name: "Friday 3-Bet Pots",
