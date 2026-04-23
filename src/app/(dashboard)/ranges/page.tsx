@@ -1,24 +1,9 @@
 import { SavedRangeList } from "@/components/ranges/saved-range-list";
+import { listDemoRanges } from "@/lib/workspace";
 
-const DEMO_RANGES = [
-  {
-    id: "range-1",
-    name: "CO Open",
-    textValue: "22+,A2s+,K9s+,QTs+,JTs,ATo+,KJo+",
-  },
-  {
-    id: "range-2",
-    name: "BB Defend",
-    textValue: "44+,A2s+,K8s+,Q9s+,J9s+,T9s,98s,AJo+,KQo",
-  },
-  {
-    id: "range-3",
-    name: "3-Bet Value",
-    textValue: "TT+,AQs+,AKo",
-  },
-];
+export default async function RangesPage() {
+  const ranges = await listDemoRanges();
 
-export default function RangesPage() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
       <section className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-table backdrop-blur">
@@ -31,7 +16,7 @@ export default function RangesPage() {
           scenario reviews.
         </p>
         <div className="mt-8">
-          <SavedRangeList ranges={DEMO_RANGES} />
+          <SavedRangeList ranges={ranges} />
         </div>
       </section>
     </main>

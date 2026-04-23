@@ -1,19 +1,7 @@
 import { auth } from "@/auth";
 import { ProjectList } from "@/components/projects/project-list";
+import { listDemoProjects } from "@/lib/workspace";
 import { redirect } from "next/navigation";
-
-const DEMO_PROJECTS = [
-  {
-    id: "project-1",
-    name: "Friday 3-Bet Pots",
-    updatedLabel: "Updated with river check-jam node",
-  },
-  {
-    id: "project-2",
-    name: "Blind vs Blind Study",
-    updatedLabel: "Saved turn probe scenario",
-  },
-];
 
 export default async function ProjectsPage() {
   const session = await auth();
@@ -23,6 +11,7 @@ export default async function ProjectsPage() {
   }
 
   const identity = session.user.name ?? session.user.email ?? "Player";
+  const projects = await listDemoProjects();
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
@@ -39,7 +28,7 @@ export default async function ProjectsPage() {
           Signed in as <span className="text-stone-200">{identity}</span>.
         </p>
         <div className="mt-8">
-          <ProjectList projects={DEMO_PROJECTS} />
+          <ProjectList projects={projects} />
         </div>
       </section>
     </main>
