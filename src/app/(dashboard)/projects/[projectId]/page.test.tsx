@@ -29,6 +29,13 @@ vi.mock("@/lib/workspace", () => ({
       { label: "Hero", equity: 52 },
       { label: "Villain", equity: 48 },
     ],
+    recentScenarios: [
+      {
+        id: "scenario-1",
+        name: "BTN vs BB single-raised pot",
+        updatedLabel: "Updated 2026-04-23",
+      },
+    ],
   }),
 }));
 
@@ -42,5 +49,6 @@ describe("ProjectWorkspacePage", () => {
 
     expect(screen.getByText(/saved ranges/i)).toBeInTheDocument();
     expect(screen.getByText(/equity results/i)).toBeInTheDocument();
+    expect(screen.getByText(/recent scenarios/i)).toBeInTheDocument();
   });
 });

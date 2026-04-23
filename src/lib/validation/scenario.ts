@@ -14,3 +14,16 @@ export const scenarioPayloadSchema = z.object({
     )
     .min(2),
 });
+
+export const scenarioResultSchema = z.object({
+  players: z.array(
+    z.object({
+      label: z.string().min(1),
+      equity: z.number(),
+    }),
+  ),
+});
+
+export const savedScenarioPayloadSchema = scenarioPayloadSchema.extend({
+  result: scenarioResultSchema.optional(),
+});

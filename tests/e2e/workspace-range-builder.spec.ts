@@ -13,4 +13,15 @@ test("workspace shows saved ranges and action controls", async ({ page }) => {
   await expect(
     page.getByRole("button", { name: /calculate equity/i }),
   ).toBeVisible();
+
+  await page.getByLabel(/scenario name/i).fill("River Jam Spot");
+  await page.getByRole("button", { name: /calculate equity/i }).click();
+
+  await expect(page.getByText(/equity updated/i)).toBeVisible();
+
+  await page.getByRole("button", { name: /save scenario/i }).click();
+
+  await expect(page.getByText(/scenario saved/i)).toBeVisible();
+  await expect(page.getByText(/recent scenarios/i)).toBeVisible();
+  await expect(page.getByText("River Jam Spot").first()).toBeVisible();
 });

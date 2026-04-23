@@ -92,6 +92,13 @@ type WorkspaceSnapshot = {
   ranges: WorkspaceRangeListItem[];
   board: string[];
   players: Array<{ label: string; equity: number }>;
+  recentScenarios: WorkspaceScenarioListItem[];
+};
+
+type WorkspaceScenarioListItem = {
+  id: string;
+  name: string;
+  updatedLabel: string;
 };
 
 export async function ensureStarterWorkspaceData(ownerId: string) {
@@ -208,8 +215,8 @@ export async function getProjectWorkspace(
 ): Promise<WorkspaceSnapshot | null> {
   await ensureStarterWorkspaceData(ownerId);
 
-  const [project, ranges, scenario] = await Promise.all([
-    db.project.findUnique({
+  const [project, ranges, scenario, recentScenarios] = await Promise.all([
+    db.project.findFirst({
       where: { id: projectId, ownerId },
       select: {
         id: true,
@@ -240,6 +247,21 @@ export async function getProjectWorkspace(
         result: true,
       },
     }),
+    db.scenario.findMany({
+      where: {
+        ownerId,
+        projectId,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      take: 5,
+      select: {
+        id: true,
+        name: true,
+        updatedAt: true,
+      },
+    }),
   ]);
 
   if (!project) {
@@ -251,6 +273,11 @@ export async function getProjectWorkspace(
     ranges,
     board: Array.isArray(scenario?.board) ? (scenario.board as string[]) : [],
     players: getResultPlayers(scenario?.result),
+    recentScenarios: recentScenarios.map((recentScenario) => ({
+      id: recentScenario.id,
+      name: recentScenario.name,
+      updatedLabel: `Updated ${formatDateLabel(recentScenario.updatedAt)}`,
+    })),
   };
 }
 

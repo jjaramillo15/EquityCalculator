@@ -6,8 +6,9 @@ const savedRangeCreateMock = vi.hoisted(() => vi.fn());
 const scenarioCreateMock = vi.hoisted(() => vi.fn());
 const projectFindManyMock = vi.hoisted(() => vi.fn());
 const savedRangeFindManyMock = vi.hoisted(() => vi.fn());
-const projectFindUniqueMock = vi.hoisted(() => vi.fn());
+const projectFindFirstMock = vi.hoisted(() => vi.fn());
 const scenarioFindFirstMock = vi.hoisted(() => vi.fn());
+const scenarioFindManyMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/db", () => ({
   db: {
@@ -15,7 +16,7 @@ vi.mock("@/lib/db", () => ({
       count: projectCountMock,
       create: projectCreateMock,
       findMany: projectFindManyMock,
-      findUnique: projectFindUniqueMock,
+      findFirst: projectFindFirstMock,
     },
     savedRange: {
       create: savedRangeCreateMock,
@@ -24,6 +25,7 @@ vi.mock("@/lib/db", () => ({
     scenario: {
       create: scenarioCreateMock,
       findFirst: scenarioFindFirstMock,
+      findMany: scenarioFindManyMock,
     },
   },
 }));
@@ -61,7 +63,7 @@ describe("workspace data", () => {
         textValue: "22+,A2s+,K9s+,QTs+,JTs,ATo+,KJo+",
       },
     ]);
-    projectFindUniqueMock.mockResolvedValue({
+    projectFindFirstMock.mockResolvedValue({
       id: "project-1",
       name: "Friday 3-Bet Pots",
     });
@@ -76,6 +78,13 @@ describe("workspace data", () => {
         ],
       },
     });
+    scenarioFindManyMock.mockResolvedValue([
+      {
+        id: "scenario-1",
+        name: "BTN vs BB single-raised pot",
+        updatedAt: new Date("2026-04-23T12:00:00.000Z"),
+      },
+    ]);
   });
 
   it("seeds the starter workspace entities for an owner", async () => {
@@ -113,6 +122,13 @@ describe("workspace data", () => {
       players: [
         { label: "Hero", equity: 52 },
         { label: "Villain", equity: 48 },
+      ],
+      recentScenarios: [
+        {
+          id: "scenario-1",
+          name: "BTN vs BB single-raised pot",
+          updatedLabel: "Updated 2026-04-23",
+        },
       ],
     });
   });

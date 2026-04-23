@@ -1,21 +1,24 @@
 "use client";
 
 type RangePercentSliderProps = {
+  label?: string;
   value: number;
   onChange: (next: number) => void;
 };
 
 export function RangePercentSlider({
+  label = "Fill Percent",
   value,
   onChange,
 }: RangePercentSliderProps) {
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-semibold uppercase tracking-[0.2em] text-stone-400">
-        Fill Percent
+        {label}
       </span>
       <div className="flex items-center gap-4">
         <input
+          aria-label={label}
           type="range"
           min={0}
           max={100}

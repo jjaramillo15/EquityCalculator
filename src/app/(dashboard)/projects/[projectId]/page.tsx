@@ -32,6 +32,7 @@ export default async function ProjectWorkspacePage({
       ranges={workspace.ranges}
       board={workspace.board}
       players={workspace.players}
+      recentScenarios={workspace.recentScenarios}
     />
   );
 }

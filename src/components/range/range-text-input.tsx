@@ -1,17 +1,23 @@
 "use client";
 
 type RangeTextInputProps = {
+  label?: string;
   value: string;
   onChange: (next: string) => void;
 };
 
-export function RangeTextInput({ value, onChange }: RangeTextInputProps) {
+export function RangeTextInput({
+  label = "Range Text",
+  value,
+  onChange,
+}: RangeTextInputProps) {
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-semibold uppercase tracking-[0.2em] text-stone-400">
-        Range Text
+        {label}
       </span>
       <textarea
+        aria-label={label}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={4}
