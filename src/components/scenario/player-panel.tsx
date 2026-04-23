@@ -1,3 +1,5 @@
+"use client";
+
 import { RangeMatrix } from "@/components/range/range-matrix";
 import { RangePercentSlider } from "@/components/range/range-percent-slider";
 import { RangeTextInput } from "@/components/range/range-text-input";
