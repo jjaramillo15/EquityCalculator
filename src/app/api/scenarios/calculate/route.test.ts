@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { POST } from "./route";
 
 describe("POST /api/scenarios/calculate", () => {
-  it("returns player equities", async () => {
+  it("returns numeric equities for a valid request", async () => {
     const response = await POST(
       new Request("http://localhost/api/scenarios/calculate", {
         method: "POST",
@@ -21,5 +21,10 @@ describe("POST /api/scenarios/calculate", () => {
     const data = await response.json();
 
     expect(data.players).toHaveLength(2);
+    expect(
+      data.players.every(
+        (player: { equity: number }) => typeof player.equity === "number",
+      ),
+    ).toBe(true);
   });
 });
